@@ -34,6 +34,14 @@ func _process(delta):
 	pass
 
 
+func place_player_on_tile(tile_coord: Vector2i):
+	var coord_x = tile_coord.x * GameData.TILE_SIZE
+	var coord_y = tile_coord.y * GameData.TILE_SIZE
+	var new_pos: Vector2 = Vector2(coord_x, coord_y) + tile_map.global_position
+	
+	player.global_position = new_pos
+
+
 func get_atlas_coord_for_layer_name(layer_name: String) -> Vector2i:
 	match layer_name:
 		LAYER_KEY_FLOOR:
@@ -65,9 +73,26 @@ func add_layer_tiles(layer_tiles, layer_name: String) -> void:
 
 func setup_level() -> void:
 	tile_map.clear()
-	var level_data = GameData.get_data_for_level("12")
+	var level_data = GameData.get_data_for_level("29")
 	var level_tiles = level_data.tiles
 	var player_start = level_data.player_start
 	
 	for layer_name in LAYER_MAP.keys():
 		add_layer_tiles(level_tiles[layer_name], layer_name)
+	
+	place_player_on_tile(Vector2i(player_start.x, player_start.y))
+	move_camera()
+
+func move_camera() -> void:
+	var tmr = tile_map.get_used_rect()
+	
+	var tile_map_start_x = tmr.position.x * GameData.TILE_SIZE
+	var tile_map_end_x = tmr.size.x * GameData.TILE_SIZE + tile_map_start_x
+	
+	var tile_map_start_y = tmr.position.y * GameData.TILE_SIZE
+	var tile_map_end_y = tmr.size.y * GameData.TILE_SIZE + tile_map_start_y
+	
+	var mid_x = tile_map_start_x + (tile_map_end_x - tile_map_start_x) / 2
+	var mid_y = tile_map_start_y + (tile_map_end_y - tile_map_start_y) / 2
+	
+	camera_2d.position = Vector2(mid_x, mid_y)
