@@ -1,0 +1,9 @@
+[gd_resource type="LabelSettings" load_steps=2 format=3 uid="uid://ju32wrh704sr"]
+
+[ext_resource type="FontFile" uid="uid://dg86dg176vrgq" path="res://assets/gemunu-libre-v8-latin-700.ttf" id="1_lsp2r"]
+
+[resource]
+font = ExtResource("1_lsp2r")
+font_size = 32
+shadow_size = 3
+shadow_color = Color(0.152941, 0.152941, 0.152941, 0.45098)
