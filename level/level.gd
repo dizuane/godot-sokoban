@@ -3,6 +3,8 @@ extends Node2D
 @onready var tile_map = $TileMap
 @onready var player = $Player
 @onready var camera_2d = $Camera2D
+@onready var hud = $CanvasLayer/HUD
+@onready var game_over_ui = $CanvasLayer/GameOverUI
 
 const FLOOR_LAYER = 0
 const WALL_LAYER = 1
@@ -37,6 +39,7 @@ func _process(delta):
 	if Input.is_action_just_pressed("exit"):
 		GameManager.load_main_scene()
 
+	hud.set_moves_label(_total_moves)
 	if _moving:
 		return
 	
@@ -69,7 +72,8 @@ func check_game_state() -> void:
 		if !cell_is_box(t):
 			return
 	
-	print("WINNING")
+	game_over_ui.show()
+	hud.hide()
 
 
 func move_box(box_tile: Vector2i, direction: Vector2i):
@@ -178,6 +182,7 @@ func setup_level() -> void:
 	
 	place_player_on_tile(Vector2i(player_start.x, player_start.y))
 	move_camera()
+	hud.set_level_label(ln)
 
 func move_camera() -> void:
 	var tmr = tile_map.get_used_rect()
