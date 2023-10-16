@@ -25,13 +25,32 @@ const LAYER_MAP = {
 	LAYER_KEY_BOXES: BOX_LAYER
 }
 
+var _moving: bool = false
+var _total_moves: int = 0
+
 
 func _ready():
 	setup_level()
 
 
 func _process(delta):
-	pass
+	if _moving:
+		return
+	
+	var move_direction = Vector2i.ZERO
+	if Input.is_action_just_pressed("right"):
+		player.flip_h = false
+		move_direction = Vector2i.RIGHT
+	if Input.is_action_just_pressed("left"):
+		player.flip_h = true
+		move_direction = Vector2i.LEFT
+	if Input.is_action_just_pressed("up"):
+		move_direction = Vector2i.UP
+	if Input.is_action_just_pressed("down"):
+		move_direction = Vector2i.DOWN
+
+	if move_direction != Vector2i.ZERO:
+		player_move(move_direction)
 
 
 func place_player_on_tile(tile_coord: Vector2i):
@@ -40,6 +59,79 @@ func place_player_on_tile(tile_coord: Vector2i):
 	var new_pos: Vector2 = Vector2(coord_x, coord_y) + tile_map.global_position
 	
 	player.global_position = new_pos
+
+
+func check_game_state() -> void:
+	for t in tile_map.get_used_cells(TARGET_LAYER):
+		if !cell_is_box(t):
+			return
+	
+	print("WINNING")
+
+
+func move_box(box_tile: Vector2i, direction: Vector2i):
+	var dest = box_tile + direction
+	
+	tile_map.erase_cell(BOX_LAYER, box_tile)
+	if dest in tile_map.get_used_cells(TARGET_LAYER):
+		tile_map.set_cell(
+			BOX_LAYER,
+			dest,
+			SOURCE_ID,
+			get_atlas_coord_for_layer_name(LAYER_KEY_TARGET_BOXES)
+		)
+	else:
+		tile_map.set_cell(
+			BOX_LAYER,
+			dest,
+			SOURCE_ID,
+			get_atlas_coord_for_layer_name(LAYER_KEY_BOXES)
+		)
+
+
+func get_player_tile() -> Vector2i:
+	var player_offset = player.global_position - tile_map.global_position
+	return Vector2i(player_offset / GameData.TILE_SIZE)
+
+
+func cell_is_wall(cell: Vector2i) -> bool:
+	return cell in tile_map.get_used_cells(WALL_LAYER)
+
+
+func cell_is_box(cell: Vector2i) -> bool:
+	return cell in tile_map.get_used_cells(BOX_LAYER)
+
+
+func cell_is_empty(cell: Vector2i) -> bool:
+	return cell_is_wall(cell) == false and cell_is_box(cell) == false
+
+
+func box_can_move(box_tile: Vector2i, direction: Vector2i) -> bool:
+	var new_tile = box_tile + direction
+	return cell_is_empty(new_tile)
+
+
+func player_move(direction: Vector2i):
+	_moving = true
+	
+	var player_tile = get_player_tile()
+	var new_tile = player_tile + direction
+	var can_move = true
+	var box_seen = false
+	
+	if cell_is_wall(new_tile):
+		can_move = false
+	if cell_is_box(new_tile):
+		box_seen = true
+		can_move = box_can_move(new_tile, direction)
+	
+	if can_move:
+		_total_moves += 1
+		if box_seen:
+			move_box(new_tile, direction)
+		place_player_on_tile(new_tile)
+		check_game_state()
+	_moving = false
 
 
 func get_atlas_coord_for_layer_name(layer_name: String) -> Vector2i:
@@ -73,7 +165,7 @@ func add_layer_tiles(layer_tiles, layer_name: String) -> void:
 
 func setup_level() -> void:
 	tile_map.clear()
-	var level_data = GameData.get_data_for_level("29")
+	var level_data = GameData.get_data_for_level("1")
 	var level_tiles = level_data.tiles
 	var player_start = level_data.player_start
 	
