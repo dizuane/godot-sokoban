@@ -10,7 +10,8 @@ var _level_number: String = "22"
 
 func _ready():
 	level_label.text = _level_number
-
+	if ScoreSync.has_level_score(_level_number):
+		check_mark.show()
 
 func _process(delta):
 	pass

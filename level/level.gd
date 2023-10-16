@@ -38,7 +38,10 @@ func _ready():
 func _process(delta):
 	if Input.is_action_just_pressed("exit"):
 		GameManager.load_main_scene()
-
+	
+	if Input.is_action_just_pressed("reload"):
+		setup_level()
+		
 	hud.set_moves_label(_total_moves)
 	if _moving:
 		return
@@ -72,8 +75,9 @@ func check_game_state() -> void:
 		if !cell_is_box(t):
 			return
 	
-	game_over_ui.show()
+	game_over_ui.game_over(GameManager.get_level_selected(), _total_moves)
 	hud.hide()
+	ScoreSync.level_completed(GameManager.get_level_selected(), _total_moves)
 
 
 func move_box(box_tile: Vector2i, direction: Vector2i):
@@ -177,12 +181,16 @@ func setup_level() -> void:
 	var level_tiles = level_data.tiles
 	var player_start = level_data.player_start
 	
+	_total_moves = 0
+	
 	for layer_name in LAYER_MAP.keys():
 		add_layer_tiles(level_tiles[layer_name], layer_name)
 	
 	place_player_on_tile(Vector2i(player_start.x, player_start.y))
 	move_camera()
-	hud.set_level_label(ln)
+	hud.new_game(ln)
+	game_over_ui.new_game()
+
 
 func move_camera() -> void:
 	var tmr = tile_map.get_used_rect()
